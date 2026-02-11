@@ -1,0 +1,7 @@
+flask
+flask-cors
+openai
+authlib
+python-dotenv
+requests
+pymongo
