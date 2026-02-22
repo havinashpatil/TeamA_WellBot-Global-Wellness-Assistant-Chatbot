@@ -28,9 +28,35 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            // Validate password length
-            if (password.length < 6) {
-                alert("❌ Password must be at least 6 characters");
+            // Validate password length (minimum 8 characters)
+            if (password.length < 8) {
+                alert("❌ Password must be at least 8 characters");
+                return;
+            }
+
+            // Validate password strength
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /\d/.test(password);
+            const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password);
+
+            if (!hasUppercase) {
+                alert("❌ Password must contain at least one uppercase letter");
+                return;
+            }
+
+            if (!hasLowercase) {
+                alert("❌ Password must contain at least one lowercase letter");
+                return;
+            }
+
+            if (!hasNumber) {
+                alert("❌ Password must contain at least one number");
+                return;
+            }
+
+            if (!hasSpecialChar) {
+                alert("❌ Password must contain at least one special character (!@#$%^&*...)");
                 return;
             }
 
@@ -61,8 +87,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         document.getElementById("email").value = "";
                         document.getElementById("password").value = "";
                         document.getElementById("language").value = "";
-                        // Redirect to login or home
-                        window.location.href = "login.html";
+                        // Redirect to dashboard
+                        window.location.href = "/dashboard";
                     } else {
                         alert("❌ Error: " + result.error);
                     }

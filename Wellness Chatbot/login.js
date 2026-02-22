@@ -26,6 +26,38 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
+      // Validate password length (minimum 8 characters)
+      if (password.length < 8) {
+        alert("❌ Password must be at least 8 characters");
+        return;
+      }
+
+      // Validate password strength
+      const hasUppercase = /[A-Z]/.test(password);
+      const hasLowercase = /[a-z]/.test(password);
+      const hasNumber = /\d/.test(password);
+      const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password);
+
+      if (!hasUppercase) {
+        alert("❌ Password must contain at least one uppercase letter");
+        return;
+      }
+
+      if (!hasLowercase) {
+        alert("❌ Password must contain at least one lowercase letter");
+        return;
+      }
+
+      if (!hasNumber) {
+        alert("❌ Password must contain at least one number");
+        return;
+      }
+
+      if (!hasSpecialChar) {
+        alert("❌ Password must contain at least one special character (!@#$%^&*...)");
+        return;
+      }
+
       const data = {
         email: email,
         password: password
@@ -50,7 +82,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("loginEmail").value = "";
             document.getElementById("loginPassword").value = "";
             // Redirect to home/chat page (adjust if needed)
-            // window.location.href = "index.html"; 
+            window.location.href = "/dashboard";
           } else {
             alert("❌ Error: " + result.error);
           }
@@ -98,6 +130,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // Remove query params from URL
     window.history.replaceState({}, document.title, window.location.pathname);
     // Redirect to home/chat page
-    // window.location.href = "index.html";
+    window.location.href = "/dashboard";
   }
 });

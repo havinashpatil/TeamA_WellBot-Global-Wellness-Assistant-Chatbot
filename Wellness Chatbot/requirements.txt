@@ -1,7 +1,9 @@
 flask
 flask-cors
 openai
+groq
 authlib
 python-dotenv
 requests
 pymongo
+python-aiml

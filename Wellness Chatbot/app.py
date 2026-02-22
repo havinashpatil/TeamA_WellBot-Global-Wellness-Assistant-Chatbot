@@ -1,18 +1,23 @@
 import os
+import warnings
+warnings.filterwarnings("ignore")
 import hashlib
 import secrets
-from flask import Flask, request, jsonify, redirect, session
+import requests as http_requests
+from flask import Flask, request, jsonify, redirect, session, send_from_directory, url_for
 from flask_cors import CORS
 from datetime import datetime
 from openai import OpenAI
+from groq import Groq
 from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
 from pymongo import MongoClient
+import aiml
 
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(32)
+app.secret_key = os.getenv('SECRET_KEY', secrets.token_hex(32))
 CORS(app, supports_credentials=True)
 
 oauth = OAuth(app)
@@ -31,15 +36,29 @@ db = client_db.get_default_database()
 users_col = db.users
 chats_col = db.chats
 
-# OpenAI client with environment variable
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
-USE_TEST_MODE = OPENAI_API_KEY is None
+# Groq client — primary LLM (free, fast, no credits needed)
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+client_groq = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
-if OPENAI_API_KEY:
-    client_openai = OpenAI(api_key=OPENAI_API_KEY)
-else:
-    client_openai = None
-    print("⚠️  WARNING: OPENAI_API_KEY not set. Running in TEST MODE with mock responses.")
+# Ollama — secondary (local offline, no API key needed)
+OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3")
+
+def ask_ollama(prompt):
+    """Send a prompt to local Ollama and return the response text."""
+    payload = {"model": OLLAMA_MODEL, "prompt": prompt, "stream": False}
+    response = http_requests.post(OLLAMA_URL, json=payload, timeout=60)
+    response.raise_for_status()
+    return response.json()["response"]
+
+# OpenAI client — last resort fallback
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+client_openai = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+
+# Initialize AIML (Traditional AI)
+kernel = aiml.Kernel()
+if os.path.exists("wellness.aiml"):
+    kernel.learn("wellness.aiml")
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
@@ -54,7 +73,23 @@ def safety_check(message):
 
 @app.route('/')
 def home():
-    return jsonify({"status": "WellBot Backend (MongoDB) is Running"})
+    return send_from_directory('.', 'login.html')
+
+@app.route('/login')
+def login_page():
+    return send_from_directory('.', 'login.html')
+
+@app.route('/register')
+def register_page():
+    return send_from_directory('.', 'register.html')
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    return send_from_directory('.', filename)
+
+@app.route('/dashboard')
+def dashboard():
+    return send_from_directory('.', 'dashboard.html')
 
 @app.route("/signup", methods=['POST'])
 def signup():
@@ -117,7 +152,7 @@ def google_callback():
     else:
         user_token = user['token']
     
-    return redirect(f'http://localhost:5173?token={user_token}&name={user_info["name"]}')
+    return redirect(f'/dashboard?token={user_token}&name={user_info["name"]}')
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -130,25 +165,52 @@ def chat():
         return jsonify({"reply": warning})
 
     try:
-        if USE_TEST_MODE or client_openai is None:
-            mock_responses = {
-                "happy": "That's wonderful! Keep spreading that positive energy!",
-                "sad": "I understand you're going through a tough time. Remember, it's okay to feel sad. Consider talking to someone you trust.",
-                "anxious": "Anxiety is a common feeling. Try some deep breathing exercises and remember you're not alone.",
-                "stressed": "Stress can be overwhelming. Take a break, go for a walk, or practice mindfulness. You've got this!",
-                "neutral": "How can I help you today? I'm here to support your wellness journey."
-            }
-            mood_lower = user_mood.lower()
-            bot_reply = mock_responses.get(mood_lower, mock_responses["neutral"])
+        # B. AIML Check (Check if there's a hard-coded rule first)
+        aiml_response = kernel.respond(user_message.upper()) # AIML usually requires uppercase
+        if aiml_response:
+            bot_reply = aiml_response
         else:
-            response = client_openai.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are WellBot, a supportive wellness assistant."},
-                    {"role": "user", "content": f"My mood is {user_mood}. {user_message}"}
-                ]
-            )
-            bot_reply = response.choices[0].message.content
+            prompt = f"""You are an empathetic wellness assistant named WellBot.
+The user's current mood is {user_mood}.
+User says: {user_message}
+Be supportive, concise, and professional. Keep response under 100 words."""
+            bot_reply = None
+
+            # C. Try Groq first (free, fast cloud API)
+            if client_groq:
+                try:
+                    response = client_groq.chat.completions.create(
+                        model="llama-3.3-70b-versatile",
+                        messages=[{"role": "user", "content": prompt}],
+                        max_tokens=200
+                    )
+                    bot_reply = response.choices[0].message.content
+                    print("✅ Response from Groq")
+                except Exception as e:
+                    print(f"⚠️ Groq Error: {e}")
+
+            # D. Try Ollama if Groq fails (local offline)
+            if bot_reply is None:
+                try:
+                    bot_reply = ask_ollama(prompt)
+                    print(f"✅ Response from Ollama ({OLLAMA_MODEL})")
+                except Exception as e:
+                    print(f"⚠️ Ollama not available: {e}")
+
+            # E. Last resort: OpenAI
+            if bot_reply is None and client_openai:
+                try:
+                    response = client_openai.chat.completions.create(
+                        model="gpt-3.5-turbo",
+                        messages=[{"role": "user", "content": prompt}]
+                    )
+                    bot_reply = response.choices[0].message.content
+                    print("✅ Response from OpenAI")
+                except Exception as e:
+                    print(f"❌ OpenAI Error: {e}")
+
+            if bot_reply is None:
+                bot_reply = "I'm having trouble connecting right now. Please try again shortly."
 
         chat_doc = {
             "user_message": user_message,
