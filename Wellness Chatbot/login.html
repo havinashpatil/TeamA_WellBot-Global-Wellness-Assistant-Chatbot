@@ -3,57 +3,158 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>WellBot | Login</title>
-  <link rel="stylesheet" href="register.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | HealthCare AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="healthcare.css">
   <style>
-    .right h2 {
-      color: #7b8fc7 !important;
-      background: none !important;
-      -webkit-text-fill-color: unset !important;
+    body {
+      background: linear-gradient(135deg, #EBF5FB 0%, #FFFFFF 100%);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .auth-container {
+      background: var(--white);
+      padding: 50px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-hover);
+      width: 100%;
+      max-width: 450px;
+      text-align: center;
+    }
+
+    .auth-header h2 {
+      margin: 20px 0 10px;
+      font-size: 2rem;
+      color: var(--text-dark);
+    }
+
+    .auth-header p {
+      color: var(--text-muted);
+      margin-bottom: 30px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #DDE4EE;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      transition: var(--transition);
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-light);
+    }
+
+    .auth-btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 10px;
+    }
+
+    .separator {
+      margin: 25px 0;
+      display: flex;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .separator::before,
+    .separator::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: #DDE4EE;
+    }
+
+    .separator span {
+      padding: 0 15px;
+    }
+
+    .google-btn {
+      width: 100%;
+      background: white;
+      border: 1px solid #DDE4EE;
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .google-btn:hover {
+      background: #F8FBFE;
+    }
+
+    .auth-footer {
+      margin-top: 30px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .auth-footer a {
+      color: var(--primary);
+      font-weight: 600;
     }
   </style>
 </head>
 
 <body>
 
-  <div class="container">
-
-    <!-- Left Section -->
-    <div class="left">
-      <h1>🌿 WellBot</h1>
-      <p>Your personal wellness companion</p>
-
-      <ul>
-        <li>✔ Mental wellness support</li>
-        <li>✔ Daily healthy habits</li>
-        <li>✔ Stress & mood tracking</li>
-      </ul>
+  <div class="auth-container">
+    <div class="logo" style="justify-content: center; margin-bottom: 10px;">
+      <span>🌿</span> HealthCare AI
+    </div>
+    <div class="auth-header">
+      <h2>Welcome Back</h2>
+      <p>Enter your details to access your health assistant</p>
     </div>
 
-    <!-- Right Section -->
-    <div class="right">
-      <h2>Login</h2>
-
-      <input id="loginEmail" type="email" placeholder="Email Address">
-      <input id="loginPassword" type="password" placeholder="Password">
-
-      <button id="loginSubmitBtn">Login</button>
-
-      <div class="separator">
-        <hr> <span>OR</span>
-        <hr>
-      </div>
-
-      <button id="googleLoginBtn" class="google-btn">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google icon">
-        Login with Google
-      </button>
-
-      <p class="link-text">
-        Don't have an account? <span id="registerLink">Register</span>
-      </p>
+    <div class="input-group">
+      <label>Email Address</label>
+      <input type="email" id="loginEmail" placeholder="name@example.com">
+    </div>
+    <div class="input-group">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••••">
     </div>
 
+    <button id="loginSubmitBtn" class="btn btn-primary auth-btn">Login to Account</button>
+
+    <div class="separator"><span>OR</span></div>
+
+    <button id="googleLoginBtn" class="google-btn">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20">
+      Continue with Google
+    </button>
+
+    <div class="auth-footer">
+      Don't have an account? <a href="/register" id="registerLink">Sign Up</a>
+    </div>
   </div>
 
   <script src="login.js"></script>

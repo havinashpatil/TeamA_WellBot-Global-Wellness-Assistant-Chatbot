@@ -73,7 +73,7 @@ def safety_check(message):
 
 @app.route('/')
 def home():
-    return send_from_directory('.', 'login.html')
+    return send_from_directory('.', 'index.html')
 
 @app.route('/login')
 def login_page():

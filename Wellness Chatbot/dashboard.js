@@ -1,7 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Check authentication
-    const token = localStorage.getItem('token') || new URLSearchParams(window.location.search).get('token');
-    const name = localStorage.getItem('name') || new URLSearchParams(window.location.search).get('name');
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlToken = searchParams.get('token');
+    const urlName = searchParams.get('name');
+
+    const token = localStorage.getItem('token') || urlToken;
+    const name = localStorage.getItem('name') || urlName;
 
     if (!token) {
         window.location.href = '/login';
@@ -9,21 +13,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Save tokens if present in URL
-    if (new URLSearchParams(window.location.search).get('token')) {
-        localStorage.setItem('token', token);
-        localStorage.setItem('name', name);
+    if (urlToken) {
+        localStorage.setItem('token', urlToken);
+        localStorage.setItem('name', urlName);
         // Clean URL
         window.history.replaceState({}, document.title, "/dashboard");
     }
 
     document.getElementById('userName').textContent = name || 'Friend';
+    if (document.getElementById('headerName')) {
+        document.getElementById('headerName').textContent = name || 'Friend';
+    }
 
     // Elements
     const chatBox = document.getElementById('chatBox');
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
-    const moodSelect = document.getElementById('moodSelect');
+    const chatToggle = document.getElementById('chatToggle');
+    const chatPanel = document.getElementById('chatPanel');
+    const closeChat = document.getElementById('closeChat');
     const logoutBtn = document.getElementById('logoutBtn');
+
+    // Toggle Chat Panel
+    chatToggle.addEventListener('click', () => {
+        chatPanel.classList.toggle('active');
+        if (chatPanel.classList.contains('active')) {
+            userInput.focus();
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    });
+
+    closeChat.addEventListener('click', () => {
+        chatPanel.classList.remove('active');
+    });
 
     // Logout
     logoutBtn.addEventListener('click', (e) => {
@@ -49,7 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Send Message Function
     async function sendMessage() {
         const message = userInput.value.trim();
-        const mood = moodSelect.value;
+        // Since we removed the mood dropdown from the main dashboard, 
+        // we'll default to 'Neutral' or fetch from a global variable if set by mood cards.
+        const mood = window.currentMood || 'Neutral';
 
         if (!message) return;
 
