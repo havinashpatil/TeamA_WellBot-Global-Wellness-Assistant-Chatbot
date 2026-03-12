@@ -143,6 +143,13 @@
       <input type="password" id="loginPassword" placeholder="••••••••">
     </div>
 
+    <!-- Admin Logic UI -->
+    <div style="margin-bottom: 20px; text-align: left; display: flex; align-items: center; gap: 10px;">
+      <input type="checkbox" id="adminMode" style="width: 20px; height: 20px; cursor: pointer;">
+      <label for="adminMode" style="margin-bottom: 0; cursor: pointer; color: #64748B; font-size: 0.9rem;">Login as
+        Administrator</label>
+    </div>
+
     <button id="loginSubmitBtn" class="btn btn-primary auth-btn">Login to Account</button>
 
     <div class="separator"><span>OR</span></div>
@@ -154,10 +161,63 @@
 
     <div class="auth-footer">
       Don't have an account? <a href="/register" id="registerLink">Sign Up</a>
+      <p style="margin-top: 20px; font-size: 0.85rem;">
+        Facing issues? <a href="#" onclick="openReportModal()" style="color: var(--primary);">Report here</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Report Issue Modal -->
+  <div id="reportModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:12px; width:100%; max-width:400px; text-align:left;">
+      <h3 style="margin-top:0;">Report an Issue</h3>
+      <p style="color:#64748B; font-size:0.9rem; margin-bottom:20px;">Let us know what problem you're facing, and our
+        admin will assist you.</p>
+
+      <div class="input-group">
+        <label>Your Email</label>
+        <input type="email" id="reportEmail" placeholder="name@example.com">
+      </div>
+      <div class="input-group">
+        <label>Describe the issue</label>
+        <textarea id="reportText"
+          style="width:100%; height:100px; padding:12px; border:1px solid #DDE4EE; border-radius:8px; font-family:inherit; resize:none;"
+          placeholder="e.g. Can't login, password reset not working..."></textarea>
+      </div>
+
+      <button onclick="submitReport()" class="btn btn-primary" style="width:100%; padding:14px; margin-top:10px;">Submit
+        Report</button>
+      <button onclick="closeReportModal()"
+        style="width:100%; background:none; border:none; color:#64748B; margin-top:15px; cursor:pointer; font-size:0.9rem;">Cancel</button>
     </div>
   </div>
 
   <script src="login.js"></script>
+  <script>
+    function openReportModal() { document.getElementById('reportModal').style.display = 'flex'; }
+    function closeReportModal() { document.getElementById('reportModal').style.display = 'none'; }
+
+    async function submitReport() {
+      const email = document.getElementById('reportEmail').value;
+      const issue = document.getElementById('reportText').value;
+
+      if (!email || !issue) return alert("Please fill in all fields.");
+
+      const response = await fetch('/api/report-issue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, issue })
+      });
+
+      if (response.ok) {
+        alert("Issue reported successfully. Admin will look into it.");
+        closeReportModal();
+      } else {
+        alert("Failed to report issue. Please try again later.");
+      }
+    }
+  </script>
 </body>
 
 </html>
